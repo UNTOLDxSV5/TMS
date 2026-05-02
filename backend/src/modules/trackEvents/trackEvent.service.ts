@@ -15,7 +15,7 @@ export const trackEventService = {
     return value;
   },
   computeLeaderboard: async (competitionId: string) => {
-    const taskAverages = await trackEventRepository.findTaskTotals(competitionId);
+    const taskAverages = await trackEventRepository.findTaskTotals(competitionId) as Array<{ taskId: string; _avg: { value: number | null } }>;
     const taskMap = new Map(taskAverages.map((entry) => [entry.taskId, entry._avg.value ?? 0]));
     return taskMap;
   },

@@ -2,7 +2,7 @@ import prisma from '../../prisma';
 
 export const leaderboardService = {
   compute: async (competitionId: string) => {
-    const tasks = await prisma.task.findMany({ where: { competitionId }, select: { id: true, weight: true, type: true } });
+    const tasks = await prisma.task.findMany({ where: { competitionId }, select: { id: true, weight: true, type: true } }) as Array<{ id: string; weight: number; type: string }>;
     const averages = await prisma.trackEvent.groupBy({
       by: ['taskId', 'userId'],
       where: { task: { competitionId }, approved: true },
@@ -10,8 +10,9 @@ export const leaderboardService = {
     });
 
     const scoreByUser = new Map<string, number>();
-    averages.forEach((row) => {
-      const task = tasks.find((taskItem) => taskItem.id === row.taskId);
+    const typedAverages = averages as Array<{ taskId: string; userId: string; _avg: { value: number | null } }>;
+    typedAverages.forEach((row) => {
+      const task = tasks.find((taskItem: { id: string }) => taskItem.id === row.taskId);
       if (!task || task.type !== 'TRACK_EVENT') return;
       const weighted = (row._avg.value ?? 0) * (task.weight / 100);
       scoreByUser.set(row.userId, (scoreByUser.get(row.userId) ?? 0) + weighted);

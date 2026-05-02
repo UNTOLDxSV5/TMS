@@ -5,13 +5,13 @@ export const dashboardService = {
     const user = await prisma.user.findUnique({ where: { id: userId }, include: { competition: true } });
     if (!user || !user.competitionId) throw { status: 404, message: 'User or competition not found' };
 
-    const tasks = await prisma.task.findMany({ where: { competitionId: user.competitionId } });
-    const submissions = await prisma.submission.findMany({ where: { userId } });
-    const trackEvents = await prisma.trackEvent.findMany({ where: { userId, approved: true } });
+    const tasks = await prisma.task.findMany({ where: { competitionId: user.competitionId } }) as Array<{ id: string; title: string; description: string; type: string; weight: number }>;
+    const submissions = await prisma.submission.findMany({ where: { userId } }) as Array<{ taskId: string; status: string }>;
+    const trackEvents = await prisma.trackEvent.findMany({ where: { userId, approved: true } }) as Array<{ taskId: string }>;
     const payments = await prisma.paymentStatus.findMany({ where: { userId } });
 
-    const totalWeight = tasks.reduce((sum, task) => sum + task.weight, 0);
-    const completedWeight = submissions.reduce((sum, sub) => {
+    const totalWeight = tasks.reduce((sum: number, task) => sum + task.weight, 0);
+    const completedWeight = submissions.reduce((sum: number, sub) => {
       const task = tasks.find((task) => task.id === sub.taskId);
       return task ? sum + task.weight : sum;
     }, 0);
